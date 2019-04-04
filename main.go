@@ -2,6 +2,7 @@ package main
 
 import (
 	"time"
+	"os"
 	"fmt"
 	"log"
 	"strconv"
@@ -11,8 +12,8 @@ import (
 )
 
 type Plan struct {
-	Repeat int
-	MaxConnections int
+	Repeat int64
+	MaxConnections int64
 }
 
 type Benchmark struct {
@@ -22,7 +23,7 @@ type Benchmark struct {
 
 type Connection struct {
 	Host string
-	Port int
+	Port int64
 	User string
 	Pass string
 	Database string
@@ -84,8 +85,8 @@ func (run *Run) Exec() {
 
 	log.Printf("Spawning %d Inserts (Maximum %d concurrent connections)", run.Repeat, run.MaxConnections)
 	// Throttled wait group
-	swg := sizedwaitgroup.New(run.MaxConnections)
-	for i := 0; i < run.Repeat; i++ {
+	swg := sizedwaitgroup.New(int(run.MaxConnections))
+	for i := 0; i < int(run.Repeat); i++ {
 		swg.Add()
 		go func(idx int) {
 			defer swg.Done()
@@ -118,12 +119,40 @@ func (run *Run) Destroy() {
 	}
 }
 
+func EnvOrDefault(key string, defaultStr string) string {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		return defaultStr
+	}
+	return val
+}
+
+func EnvOrDefaultInt(key string, defaultInt int64) int64 {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		return defaultInt		
+	}
+	retval, err := strconv.ParseInt(val, 10, 0)
+	if err != nil {
+		log.Panicf("Could not parse value '%s' as int for environment variable %s", val, key)
+	}			
+	return retval	
+}
+
 func main() {
 	fmt.Println("GoBench Starting")
 
-	conn := Connection{ Host: "127.0.0.1", Port: 3306, User: "root", Pass: "q1w2e3r4", Driver: "mysql" }
+
+	host := EnvOrDefault("DB_HOST", "127.0.0.1")
+	port := EnvOrDefaultInt("DB_PORT", 3306)
+	user := EnvOrDefault("DB_USER", "root")
+	pass := EnvOrDefault("DB_PASS", "q1w2e3r4")
+	repeat := EnvOrDefaultInt("REPEAT", 1000)
+	maxConn := EnvOrDefaultInt("MAX_CONNECTIONS", 70)
+
+	conn := Connection{ Host: host, Port: port, User: user, Pass: pass, Driver: "mysql" }
 	
-	run := Run{ ID: 0, Benchmark: Benchmark{ ID: 0, Plan: Plan { Repeat: 300, MaxConnections: 50 } }, Conn: conn }
+	run := Run{ ID: 0, Benchmark: Benchmark{ ID: 0, Plan: Plan { Repeat: repeat, MaxConnections: maxConn } }, Conn: conn }
 	
 	run.Prepare()
 	defer run.Destroy()
