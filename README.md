@@ -5,8 +5,9 @@ _Releational Database Benchmarking Tool_
 
 ## Environment Varialbles:
 
-| Var | Default |
-| --- | :-----: | ---:|
+
+| Variable | Default |
+| -------- | ------  |
 | DB_HOST | 127.0.0.1 |
 | DB_PORT | 3306 |
 | DB_USER | root |
