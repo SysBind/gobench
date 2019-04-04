@@ -151,6 +151,8 @@ func main() {
 	maxConn := EnvOrDefaultInt("MAX_CONNECTIONS", 70)
 
 	conn := Connection{ Host: host, Port: port, User: user, Pass: pass, Driver: "mysql" }
+
+	log.Printf("Connection String is %s", conn.String())
 	
 	run := Run{ ID: 0, Benchmark: Benchmark{ ID: 0, Plan: Plan { Repeat: repeat, MaxConnections: maxConn } }, Conn: conn }
 	
@@ -159,5 +161,5 @@ func main() {
 
 	run.Exec()
 	
-	fmt.Printf("GoBench Done in %d nanoseconds (%f seconds) \n", run.Duration, float64(run.Duration) / 1000000000)
+	log.Printf("GoBench Done in %d nanoseconds (%f seconds) \n", run.Duration, float64(run.Duration) / 1000000000)
 }
