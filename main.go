@@ -58,10 +58,17 @@ func (run *Run) Prepare() {
 		log.Fatal(err)
 	}
 
-	
+
+	log.Printf("Creating Database bench_"+strconv.Itoa(run.ID))
 	_, err = db.Exec("CREATE DATABASE bench_"+strconv.Itoa(run.ID) + ";");
 	if err != nil {
-		panic(err)
+		log.Printf("Dropping already existed Database bench_"+strconv.Itoa(run.ID))
+		_, err = db.Exec("DROP DATABASE bench_"+strconv.Itoa(run.ID) + ";");
+		log.Printf("Creating Database bench_"+strconv.Itoa(run.ID))
+		_, err = db.Exec("CREATE DATABASE bench_"+strconv.Itoa(run.ID) + ";");
+		if err != nil {		
+			panic(err)
+		}
 	}
 	_, err = db.Exec("USE bench_" + strconv.Itoa(run.ID) + ";");
 	if err != nil {
