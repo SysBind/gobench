@@ -85,12 +85,12 @@ func (run *Run) Exec() {
 		log.Fatal(err)
 	}
 
-	_, err = db.Exec("CREATE TABLE x(id int, s1 char(200), s2 char(200), s3 char(200), CONSTRAINT PRIMARY KEY (id));")
-	if err != nil {
-		panic(err)
-	}
-
 	for {
+		_, err = db.Exec("CREATE TABLE x(id int, s1 char(200), s2 char(200), s3 char(200), CONSTRAINT PRIMARY KEY (id));")
+		if err != nil {
+			panic(err)
+		}
+		
 		start := time.Now()
 		log.Printf("Spawning %d Inserts (Maximum %d concurrent connections)", run.Repeat, run.MaxConnections)
 		// Throttled wait group
@@ -116,6 +116,7 @@ func (run *Run) Exec() {
 		log.Printf("Run done in %d nanoseconds (%f seconds) \n", run.Duration, float64(run.Duration) / float64(time.Second))
 		log.Printf("Sleeping for %d seconds before next run \n", run.Delay / time.Second)
 		time.Sleep(run.Delay)
+		_, err = db.Exec("DROP TABLE x;")
 	}
 }
 
