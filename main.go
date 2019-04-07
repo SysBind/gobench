@@ -85,7 +85,7 @@ func (run *Run) Exec() {
 		log.Fatal(err)
 	}
 
-	_, err = db.Exec("CREATE TABLE x(id int, s1 char(200), s2 char(200), s3 char(200));")
+	_, err = db.Exec("CREATE TABLE x(id int, s1 char(200), s2 char(200), s3 char(200), CONSTRAINT PRIMARY KEY (id));")
 	if err != nil {
 		panic(err)
 	}
