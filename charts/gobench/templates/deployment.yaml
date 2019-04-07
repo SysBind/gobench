@@ -25,7 +25,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          environment:
+          env:
             - name: DB_HOST
               value: percona-pxc
             - name: DB_PASS
