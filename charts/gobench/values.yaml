@@ -9,8 +9,8 @@ image:
   tag: latest
   pullPolicy: Always
 
-nameOverride: ""
-fullnameOverride: ""
+nameOverride: "gobench"
+fullnameOverride: "gobench"
 
 resources: {}
 
