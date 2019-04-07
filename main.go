@@ -13,6 +13,7 @@ import (
 
 type Plan struct {
 	Repeat int64
+	Delay time.Duration
 	MaxConnections int64
 }
 
@@ -71,7 +72,6 @@ func (run *Run) Prepare() {
 }
 
 func (run *Run) Exec() {
-	start := time.Now()
 	db, err := sql.Open(run.Conn.Driver, run.Conn.String())
 	defer db.Close()
 	if err != nil {
@@ -83,27 +83,33 @@ func (run *Run) Exec() {
 		panic(err)
 	}
 
-	log.Printf("Spawning %d Inserts (Maximum %d concurrent connections)", run.Repeat, run.MaxConnections)
-	// Throttled wait group
-	swg := sizedwaitgroup.New(int(run.MaxConnections))
-	for i := 0; i < int(run.Repeat); i++ {
-		swg.Add()
-		go func(idx int) {
-			defer swg.Done()
-			db, err := sql.Open(run.Conn.Driver, run.Conn.String())
-			defer db.Close()
-			if err != nil {
-				log.Fatal(err)
-			}
-			_, err = db.Exec("INSERT INTO x VALUES(" + strconv.Itoa(idx) + ", 'x', 'y', 'z');")
-			if err != nil {
-				panic(err)
-			}			
-		}(i)
+	for {
+		start := time.Now()
+		log.Printf("Spawning %d Inserts (Maximum %d concurrent connections)", run.Repeat, run.MaxConnections)
+		// Throttled wait group
+		swg := sizedwaitgroup.New(int(run.MaxConnections))
+		for i := 0; i < int(run.Repeat); i++ {
+			swg.Add()
+			go func(idx int) {
+				defer swg.Done()
+				db, err := sql.Open(run.Conn.Driver, run.Conn.String())
+				defer db.Close()
+				if err != nil {
+					log.Fatal(err)
+				}
+				_, err = db.Exec("INSERT INTO x VALUES(" + strconv.Itoa(idx) + ", 'x', 'y', 'z');")
+				if err != nil {
+					panic(err)
+				}			
+			}(i)
+		}
+		swg.Wait()
+		t := time.Now()
+		run.Duration = t.Sub(start)
+		log.Printf("Run done in %d nanoseconds (%f seconds) \n", run.Duration, float64(run.Duration) / float64(time.Second))
+		log.Printf("Sleeping for %d seconds before next run \n", run.Delay / time.Second)
+		time.Sleep(run.Delay)
 	}
-	swg.Wait()
-	t := time.Now()
-	run.Duration = t.Sub(start)
 }
 
 func (run *Run) Destroy() {
@@ -148,13 +154,14 @@ func main() {
 	user := EnvOrDefault("DB_USER", "root")
 	pass := EnvOrDefault("DB_PASS", "q1w2e3r4")
 	repeat := EnvOrDefaultInt("REPEAT", 1000)
+	delay := time.Duration(EnvOrDefaultInt("DELAY", 300)) * time.Second
 	maxConn := EnvOrDefaultInt("MAX_CONNECTIONS", 70)
 
 	conn := Connection{ Host: host, Port: port, User: user, Pass: pass, Driver: "mysql" }
 
 	log.Printf("Connection String is %s", conn.String())
 	
-	run := Run{ ID: 0, Benchmark: Benchmark{ ID: 0, Plan: Plan { Repeat: repeat, MaxConnections: maxConn } }, Conn: conn }
+	run := Run{ ID: 0, Benchmark: Benchmark{ ID: 0, Plan: Plan { Repeat: repeat, Delay: delay, MaxConnections: maxConn } }, Conn: conn }
 	
 	run.Prepare()
 	defer run.Destroy()

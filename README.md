@@ -13,5 +13,6 @@ _Releational Database Benchmarking Tool_
 | DB_USER | root |
 | DB_PASS | q1w2e3r4 |
 | REPEAT | 1000 |
+| DELAY | 300 |
 | MAX_CONNECTIONS | 70 |
 
