@@ -154,7 +154,7 @@ func EnvOrDefaultInt(key string, defaultInt int64) int64 {
 }
 
 func main() {
-	fmt.Println("GoBench Starting")
+	fmt.Println("GoBench Starting..")
 
 
 	host := EnvOrDefault("DB_HOST", "127.0.0.1")
