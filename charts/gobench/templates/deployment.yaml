@@ -30,6 +30,12 @@ spec:
               value: percona-pxc
             - name: DB_PASS
               value: coim
+            - name: REPEAT
+              value: 10000
+            - name: DELAY
+              value: 30
+            - name: MAX_CONNECTIONS
+              value: 700
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
