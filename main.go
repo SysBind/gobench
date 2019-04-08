@@ -7,6 +7,7 @@ import (
 	"log"
 	"strconv"
 	"database/sql"
+	"math/rand"
 	"github.com/remeh/sizedwaitgroup"	
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -50,7 +51,7 @@ func (conn Connection) String() string {
 }
 
 func (run *Run) Prepare() {
-	run.ID = 3
+	run.ID = rand.Intn(2147483640)
 
 	db, err := sql.Open(run.Conn.Driver, run.Conn.String())
 	defer db.Close()
